@@ -4,3 +4,4 @@
 datastore/
 .vscode
 .DS_Store
+*.csv
