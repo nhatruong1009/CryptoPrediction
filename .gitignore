@@ -5,3 +5,4 @@ datastore/
 .vscode
 .DS_Store
 *.csv
+__pycache__
