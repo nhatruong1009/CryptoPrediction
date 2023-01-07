@@ -1,22 +1,9 @@
 from sklearn.base import BaseEstimator, RegressorMixin
-from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.api import SARIMAX, AutoReg, ExponentialSmoothing, SimpleExpSmoothing, Holt
+from statsmodels.tsa.api import SARIMAX
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense 
+from sklearn.linear_model import LinearRegression
 
-class ArimaEstimator(BaseEstimator, RegressorMixin):
-    def __init__(self, order=(5,1,0)):
-        self.order = order
-    def fit(self, X, y):
-        return self
-    def predict(self, X):
-        pred = []
-        for i in range(X.shape[0]):
-            self.model = ARIMA(X[i], order=self.order)
-            self.model_fit = self.model.fit()
-            pred.append(self.model_fit.forecast()[0])
-        return pred
-    
 class SarimaxEstimator(BaseEstimator, RegressorMixin):
     def __init__(self, order=(5,1,0), seasonal_order=(1,1,1,12)):
         self.order = order
@@ -31,50 +18,18 @@ class SarimaxEstimator(BaseEstimator, RegressorMixin):
             pred.append(self.model_fit.forecast()[0])
         return pred
     
-class AutoRegEstimator(BaseEstimator, RegressorMixin):
-    def __init__(self, lags=1):
-        self.lags = lags
-    def fit(self, X, y):
-        return self
-    def predict(self, X):
-        pred = []
-        for i in range(X.shape[0]):
-            self.model = AutoReg(X[i], lags=self.lags)
-            self.model_fit = self.model.fit()
-            pred.append(self.model_fit.predict(len(X[i]), len(X[i]))[0])
-        return pred
-    
-class ExponentialSmoothingEstimator(BaseEstimator, RegressorMixin):
-    def __init__(self, trend=None, damped_trend=False, seasonal=None, seasonal_periods=12):
-        self.trend = trend
-        self.damped_trend = damped_trend
-        self.seasonal = seasonal
-        self.seasonal_periods = seasonal_periods
-    def fit(self, X, y):
-        return self
-    def predict(self, X):
-        pred = []
-        for i in range(X.shape[0]):
-            self.model = ExponentialSmoothing(X[i], trend=self.trend, damped_trend=self.damped_trend, seasonal=self.seasonal, seasonal_periods=self.seasonal_periods)
-            self.model_fit = self.model.fit()
-            pred.append(self.model_fit.forecast()[0])
-        return pred
-
-class HoltEstimator(BaseEstimator, RegressorMixin):
+class LinearRegressionEstimator(BaseEstimator, RegressorMixin):
     def __init__(self):
-        pass
+        self.model = LinearRegression()
     def fit(self, X, y):
+        self.model.fit(X.reshape(X.shape[0],X.shape[1]), y)
         return self
     def predict(self, X):
-        pred = []
-        for i in range(X.shape[0]):
-            self.model = Holt(X[i])
-            self.model_fit = self.model.fit()
-            pred.append(self.model_fit.forecast()[0])
-        return pred
+        return self.model.predict(X.reshape(X.shape[0],X.shape[1]))
+
     
 class LSTMEstimator(BaseEstimator, RegressorMixin):
-    def __init__(self, epochs=2, batch_size=1, neurons=200):
+    def __init__(self, epochs=5, batch_size=32, neurons=200):
         self.epochs = epochs
         self.batch_size = batch_size
         self.neurons = neurons
@@ -89,3 +44,18 @@ class LSTMEstimator(BaseEstimator, RegressorMixin):
         return self
     def predict(self, X):
         return self.model.predict(X)
+    
+
+class Estimator(BaseEstimator):
+    def __init__(self, estimator = LinearRegression()):
+        self.estimator = estimator
+
+    def fit(self, X, y=None, **kwargs):
+        self.estimator.fit(X, y)
+        return self
+
+    def predict(self, X, y=None):
+        return self.estimator.predict(X)
+
+    def score(self, X, y):
+        return self.estimator.score(X, y)
