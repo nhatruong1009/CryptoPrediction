@@ -56,6 +56,3 @@ class Estimator(BaseEstimator):
 
     def predict(self, X, y=None):
         return self.estimator.predict(X)
-
-    def score(self, X, y):
-        return self.estimator.score(X, y)
