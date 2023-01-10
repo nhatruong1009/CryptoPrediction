@@ -5,7 +5,7 @@ from tensorflow.keras.layers import LSTM, Dense
 from sklearn.linear_model import LinearRegression
 
 class SarimaxEstimator(BaseEstimator, RegressorMixin):
-    def __init__(self, order=(5,1,0), seasonal_order=(1,1,1,12)):
+    def __init__(self, order=None, seasonal_order=None):
         self.order = order
         self.seasonal_order = seasonal_order
     def fit(self, X, y):
@@ -18,14 +18,16 @@ class SarimaxEstimator(BaseEstimator, RegressorMixin):
             pred.append(self.model_fit.forecast()[0])
         return pred
     
+    
 class LinearRegressionEstimator(BaseEstimator, RegressorMixin):
-    def __init__(self):
-        self.model = LinearRegression()
+    def __init__(self, fit_intercept=False):
+        self.fit_intercept = fit_intercept
+        self.model = LinearRegression(fit_intercept=fit_intercept)
     def fit(self, X, y):
-        self.model.fit(X.reshape(X.shape[0],X.shape[1]), y)
+        self.model.fit(X.reshape(X.shape[0], -1), y)
         return self
     def predict(self, X):
-        return self.model.predict(X.reshape(X.shape[0],X.shape[1]))
+        return self.model.predict(X.reshape(X.shape[0], -1))
 
     
 class LSTMEstimator(BaseEstimator, RegressorMixin):
@@ -35,10 +37,9 @@ class LSTMEstimator(BaseEstimator, RegressorMixin):
         self.neurons = neurons
     def fit(self, X, y):
         self.model = Sequential()
-        self.model.add(LSTM(self.neurons, return_sequences=True, input_shape=(X.shape[1], 1)))
-        self.model.add(LSTM(self.neurons, return_sequences=False))
-        self.model.add(Dense(100))
-        self.model.add(Dense(1))
+        self.model.add(LSTM(self.neurons, return_sequences=True, input_shape=(X.shape[1], X.shape[2])))
+        self.model.add(LSTM(self.neurons))
+        self.model.add(Dense(X.shape[2]))
         self.model.compile(optimizer='adam', loss='mean_squared_error')
         self.model.fit(X, y, batch_size=self.batch_size, epochs=self.epochs)
         return self
