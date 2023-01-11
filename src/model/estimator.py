@@ -1,8 +1,9 @@
 from sklearn.base import BaseEstimator, RegressorMixin
 from statsmodels.tsa.api import SARIMAX
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense 
+from tensorflow.keras.layers import GRU, Dense 
 from sklearn.linear_model import LinearRegression
+import numpy as np
 
 class SarimaxEstimator(BaseEstimator, RegressorMixin):
     def __init__(self, order=None, seasonal_order=None):
@@ -30,15 +31,14 @@ class LinearRegressionEstimator(BaseEstimator, RegressorMixin):
         return self.model.predict(X.reshape(X.shape[0], -1))
 
     
-class LSTMEstimator(BaseEstimator, RegressorMixin):
+class GRUEstimator(BaseEstimator, RegressorMixin):
     def __init__(self, epochs=5, batch_size=32, neurons=200):
         self.epochs = epochs
         self.batch_size = batch_size
         self.neurons = neurons
     def fit(self, X, y):
         self.model = Sequential()
-        self.model.add(LSTM(self.neurons, return_sequences=True, input_shape=(X.shape[1], X.shape[2])))
-        self.model.add(LSTM(self.neurons))
+        self.model.add(GRU(self.neurons, input_shape=(X.shape[1], X.shape[2])))
         self.model.add(Dense(X.shape[2]))
         self.model.compile(optimizer='adam', loss='mean_squared_error')
         self.model.fit(X, y, batch_size=self.batch_size, epochs=self.epochs)
